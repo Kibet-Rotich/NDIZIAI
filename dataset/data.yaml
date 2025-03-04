@@ -1,0 +1,5 @@
+train: /content/drive/MyDrive/datasets/banana_ripeness/train
+val: /content/drive/MyDrive/datasets/banana_ripeness/valid
+test: /content/drive/MyDrive/datasets/banana_ripeness/test  # Optional
+nc: 4
+names: ["Unripe", "Ripe", "Overripe", "Rotten"]
