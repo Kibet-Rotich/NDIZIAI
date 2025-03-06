@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import PredictView
+from .views import classify_banana
 
 urlpatterns = [
-    path('predict/', PredictView.as_view(), name='predict')
+    path('classify/', classify_banana, name='classify_banana')
 ]

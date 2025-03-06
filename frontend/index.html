@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banana Ripeness Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            text-align: left;
+        }
+        #preview {
+            margin-top: 10px;
+            max-width: 100%;
+            display: none;
+            border-radius: 5px;
+            border: 2px solid #ddd;
+        }
+        #loading {
+            display: none;
+            font-size: 18px;
+            color: #007bff;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload a Banana Image</h1>
+
+    <input type="file" id="imageInput" accept="image/*">
+    <br>
+    <img id="preview" src="#" alt="Image Preview">
+    <br>
+    <button id="classifyButton">Classify</button>
+    
+    <p id="loading">Classifying... Please wait.</p>
+
+    <div id="result">
+        <h3>Classification Results:</h3>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
