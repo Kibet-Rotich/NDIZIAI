@@ -5,13 +5,13 @@ This project aims to classify banana ripeness stages using AI and provide value 
 - **Frontend**: A user-friendly interface for uploading images and viewing results.
 - **Backend**: Handles API requests and business logic.
 - **AI Module**: Uses YOLOv8 to classify banana ripeness.
-- **Database Module**: Stores classification results and value addition data.
+- **Database Module**: Stores value addition data.
 
 ## 🔧 Tech Stack
 - **AI Model**: YOLOv8 (Ultralytics)
 - **Backend**: Django REST Framework
-- **Frontend**: Html, css & JS
-- **Database**: PostgreSQL
+- **Frontend**: Html, CSS & JS
+- **Database**: SQLite
 - **Deployment**: Google Colab (for training), Docker (for API deployment)
 
 ## 📂 Folder Structure
@@ -19,8 +19,8 @@ This project aims to classify banana ripeness stages using AI and provide value 
 banana_ripeness_classification/
 │-- frontend/        # frontend
 │-- backend/         # Django backend
-│-- ai/       # YOLOv8 training and inference
-│-- database/        # PostgreSQL setup
+│-- api/       # YOLOv8 training and inference
+│-- db/        # Info base module
 │-- README.md        # Project documentation
 ```
 
@@ -43,8 +43,8 @@ python manage.py runserver
 - **Optimization**: Using mixed precision, reduced image size, and batch normalization.
 
 ## 🚀 API Usage
-- **POST /classify** → Upload an image and get ripeness stage.
-- **GET /recommendations** → Get value addition suggestions for classified ripeness.
+- **POST /api/classify/** → Upload an image and get ripeness stage.
+- **GET /db/value-addition/?ripeness_stage={stage}** → Get value addition suggestions for classified ripeness.
 
 ## 👨‍💻 Contributors
 - **AI Module**: @rotich Kibet
