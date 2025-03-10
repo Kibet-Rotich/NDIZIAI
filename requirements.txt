@@ -1,0 +1,9 @@
+django
+djangorestframework
+tensorflow
+torch
+opencv-python
+pillow
+requests
+django-cors-headers
+
