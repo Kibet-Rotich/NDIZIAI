@@ -4,90 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Banana Ripeness Classifier</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-        h1 {
-            color: #333;
-        }
-        input, button {
-            margin: 10px;
-            padding: 10px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
-        }
-        button:disabled {
-            background-color: #ccc;
-        }
-        #result, #valueAddition {
-            margin-top: 20px;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            display: inline-block;
-            text-align: left;
-            width: 60%;
-        }
-        #preview {
-            margin-top: 10px;
-            max-width: 100%;
-            display: none;
-            border-radius: 5px;
-            border: 2px solid #ddd;
-        }
-        #loading {
-            display: none;
-            font-size: 18px;
-            color: #007bff;
-            margin-top: 10px;
-        }
-        .value-methods {
-            margin-top: 15px;
-        }
-        .value-item {
-            background: #f9f9f9;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border-left: 5px solid #007bff;
-        }
-        .value-item a {
-            display: block;
-            color: #007bff;
-            margin-top: 5px;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Upload a Banana Image</h1>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-6">
 
-    <input type="file" id="imageInput" accept="image/*">
-    <br>
-    <img id="preview" src="#" alt="Image Preview">
-    <br>
-    <button id="classifyButton">Classify</button>
-    
-    <p id="loading">Classifying... Please wait.</p>
+    <div class="bg-white shadow-lg rounded-xl p-8 w-full max-w-md text-center">
+        <h1 class="text-2xl font-bold text-gray-700">Upload a Banana Image</h1>
+        
+        <div class="mt-4">
+            <input type="file" id="imageInput" accept="image/*" 
+                   class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 p-2 focus:outline-none">
+        </div>
 
-    <div id="result">
-        <h3>Classification Results:</h3>
+        <div class="mt-4 flex justify-center">
+            <img id="preview" src="#" alt="Image Preview" class="hidden max-w-xs rounded-lg border border-gray-300">
+        </div>
+
+        <button id="classifyButton" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg transition-all">
+            Classify
+        </button>
+
+        <p id="loading" class="hidden text-blue-500 font-semibold mt-4">Classifying... Please wait.</p>
+
+        <div id="result" class="mt-6 hidden bg-gray-50 p-4 rounded-lg shadow-md">
+            <h3 class="text-lg font-bold text-gray-700">Classification Results:</h3>
+            <p class="text-gray-600 mt-2"></p>
+        </div>
+
+        <div id="valueAddition" class="mt-6 hidden bg-gray-50 p-4 rounded-lg shadow-md">
+            <h3 class="text-lg font-bold text-gray-700">Value Addition Methods</h3>
+            <div class="value-methods space-y-2"></div>
+        </div>
     </div>
 
-    <div id="valueAddition" style="display: none;">
-        <h3>Value Addition Methods</h3>
-    </div>
-
+    <!-- Link to External JavaScript -->
     <script src="script.js"></script>
+
 </body>
 </html>
