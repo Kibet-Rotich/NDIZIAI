@@ -1,53 +1,79 @@
-# Banana Ripeness Classification & Value Addition
+# NDIZIAI
 
-## 📌 Project Overview
-This project aims to classify banana ripeness stages using AI and provide value addition recommendations. It consists of four main modules:
-- **Frontend**: A user-friendly interface for uploading images and viewing results.
-- **Backend**: Handles API requests and business logic.
-- **AI Module**: Uses YOLOv8 to classify banana ripeness.
-- **Database Module**: Stores value addition data.
+AI-powered banana ripeness classification with value-addition recommendations.
 
-## 🔧 Tech Stack
-- **AI Model**: YOLOv8 (Ultralytics)
-- **Backend**: Django REST Framework
-- **Frontend**: Html, CSS & JS
-- **Database**: SQLite
-- **Deployment**: Google Colab (for training), Docker (for API deployment)
+This project combines:
+- A Django + Django REST Framework backend
+- A YOLO model for banana ripeness classification
+- A simple frontend for image upload and result display
+- A value-addition knowledge base stored in SQLite
 
-## 📂 Folder Structure
-```
-banana_ripeness_classification/
-│-- frontend/        # frontend
-│-- backend/         # Django backend
-│-- api/       # YOLOv8 training and inference
-│-- db/        # Info base module
-│-- README.md        # Project documentation
-```
+## What The System Does
 
-## ⚙️ Installation & Setup
-### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/Kibet-Rotich/NDIZIAI.git 
-cd ndiziai
-```
-### 2️⃣ Set Up Backend
-```bash
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
+1. Accepts a banana image upload.
+2. Classifies the banana stage (for example: unripe, ripe, overripe, rotten).
+3. Returns prediction confidence scores.
+4. Retrieves value-addition methods for the predicted ripeness stage.
 
-## 🏋️‍♂️ Training the Model
-- **Dataset**: Images of bananas labeled in different ripeness stages.
-- **Training**: Run on Google Colab using YOLOv8 lightweight models.
-- **Optimization**: Using mixed precision, reduced image size, and batch normalization.
+## Tech Stack
 
-## 🚀 API Usage
-- **POST /api/classify/** → Upload an image and get ripeness stage.
-- **GET /db/value-addition/?ripeness_stage={stage}** → Get value addition suggestions for classified ripeness.
+- Backend: Django, Django REST Framework
+- AI inference: Ultralytics YOLO
+- Database: SQLite
+- Frontend: HTML, Tailwind CSS (CDN), JavaScript
+- API docs UI: Swagger / ReDoc via drf-yasg
 
-## 👨‍💻 Contributors
-- **AI Module**: @rotich Kibet
-- **Backend**: @Meshack
-- **Frontend**: @Mike
-- **Database**: @Christine
+## Project Structure
+
+NDIZIAI/
+- api/ : Classification endpoint and model inference logic
+- db/ : Value-addition models, serializers, and API endpoint
+- backend/ : Placeholder app (currently minimal)
+- ndiziai/ : Django project settings and root URLs
+- frontend/ : Static frontend demo (HTML/CSS/JS)
+- dataset/ : Training/validation/test image dataset
+- best.pt : Trained YOLO weights file used by inference
+- manage.py : Django management entry point
+- requirements.txt : Python dependencies
+- documentation/ : Detailed technical documentation
+
+## Quick Start
+
+1. Create and activate a virtual environment.
+2. Install dependencies:
+	 pip install -r requirements.txt
+3. Run migrations:
+	 python manage.py migrate
+4. Start server:
+	 python manage.py runserver
+5. Open frontend demo:
+	 Open frontend/index.html in a browser.
+
+Default API base URL:
+- http://127.0.0.1:8000
+
+## Main API Endpoints
+
+- POST /api/classify/
+	Upload an image file under form key image.
+
+- GET /db/value-addition/?ripeness_stage=<stage>
+	Fetch value-addition methods for a ripeness stage.
+
+- GET /swagger/
+	Interactive Swagger API docs.
+
+- GET /redoc/
+	ReDoc API documentation UI.
+
+## Detailed Documentation
+
+- Setup guide: documentation/setup.md
+- Architecture: documentation/architecture.md
+- API reference: documentation/api-reference.md
+
+## Notes
+
+- The model weights file best.pt is loaded from the project root.
+- CORS is currently open for all origins in development settings.
+- Current test files are placeholders and should be expanded for production readiness.
