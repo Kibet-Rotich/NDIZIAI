@@ -1,0 +1,448 @@
+NDIZIAI BANANA RIPENESS CLASSIFICATION AND VALUE-ADDITION RECOMMENDATION SYSTEM
+
+PROJECT DOCUMENTATION
+
+Prepared for project reporting and Word conversion
+
+
+DECLARATION
+
+This documentation is an original technical report for the NDIZIAI project and has been prepared for academic and development reference. It has not been submitted elsewhere for the award of any academic qualification.
+
+SIGNATURE: ______________________    DATE: ______________________
+NAME: ____________________________
+
+Supervisor approval:
+
+SIGNATURE: ______________________    DATE: ______________________
+NAME: ____________________________
+
+
+DEDICATION
+
+This project is dedicated to everyone working to reduce post-harvest fruit loss through practical, technology-driven solutions. It is also dedicated to developers, farmers, and entrepreneurs who want a simple way to turn banana ripeness information into useful value-addition decisions.
+
+
+ACKNOWLEDGEMENT
+
+I acknowledge the guidance, support, and encouragement received during the development of the NDIZIAI project. Special appreciation goes to anyone who contributed feedback, testing time, or domain insight during the design of the system. I also recognize the effort required to combine machine learning, web development, and database-driven recommendations into a single working application.
+
+
+ABSTRACT
+
+NDIZIAI is a web-based banana ripeness classification system that uses an AI model to predict the ripeness stage of a banana image and then returns suitable value-addition recommendations for that stage. The application combines a Django backend, a YOLO-based classification model, a relational SQLite database, and a simple frontend for image upload and result display.
+
+The system accepts an uploaded banana image, runs inference using trained weights stored in best.pt, and returns the predicted class together with confidence scores. The predicted ripeness stage is then used to query the value-addition knowledge base, which stores structured guidance such as product descriptions, preparation steps, ingredients, storage tips, market trends, and selling places. The result is a practical decision-support tool that helps users move from image-based ripeness recognition to usable post-harvest value-addition suggestions.
+
+The project demonstrates how computer vision and rule-based retrieval can be combined into a lightweight, locally deployable solution for agricultural support and small-scale food processing guidance.
+
+
+TABLE OF CONTENTS
+
+Declaration
+Dedication
+Acknowledgement
+Abstract
+List of Abbreviations
+Chapter 1: Introduction
+Chapter 2: Literature Review
+Chapter 3: Methodology
+Chapter 4: System Analysis
+Chapter 5: System Design and Implementation
+Chapter 6: Testing and Evaluation
+Chapter 7: Conclusion and Future Work
+References
+
+
+LIST OF ABBREVIATIONS
+
+AI - Artificial Intelligence
+API - Application Programming Interface
+CPU - Central Processing Unit
+CSRF - Cross-Site Request Forgery
+CORS - Cross-Origin Resource Sharing
+DB - Database
+DRF - Django REST Framework
+Django - Python web framework
+FPS - Frames Per Second
+JSON - JavaScript Object Notation
+ML - Machine Learning
+POST - HTTP request method used to submit data
+REST - Representational State Transfer
+SQLite - Lightweight relational database engine
+UI - User Interface
+YOLO - You Only Look Once
+
+
+CHAPTER 1: INTRODUCTION
+
+1.1 Background of the Study
+
+Bananas are one of the most widely consumed fruits in many regions, and their value changes significantly depending on ripeness stage. Unripe bananas can be processed into flour, chips, and other products, while ripe bananas are suitable for direct consumption, baking, smoothies, and snack products. Overripe bananas can still be converted into high-value products such as cakes, pancakes, puree, animal feed, or compost, while rotten bananas are generally unsuitable for food but may still inform waste management or fertilizer-related decisions.
+
+In many practical situations, users estimate ripeness visually, which can lead to inconsistent decisions and post-harvest loss. A system that can automatically classify ripeness from an image and then suggest productive next steps can reduce uncertainty and improve value recovery. NDIZIAI was created to address that need by combining image classification with a structured value-addition database.
+
+1.2 Problem Statement
+
+Many banana growers, vendors, processors, and buyers make ripeness decisions manually. Manual assessment is fast but subjective, and it can fail when bananas are in borderline stages. At the same time, users often know the ripeness stage but do not have an easy way to identify suitable value-addition opportunities for that stage. Existing generic agricultural tools often focus on classification only or advisory content only, but not both together in a simple local workflow.
+
+There is therefore a need for a lightweight system that can classify banana ripeness from an image and return practical value-addition recommendations matched to that ripeness stage.
+
+1.3 Aim of the Project
+
+The aim of NDIZIAI is to build a web-based banana ripeness classification system that predicts ripeness from uploaded images and provides relevant value-addition recommendations for the detected stage.
+
+1.4 Objectives of the Project
+
+The project is guided by the following objectives:
+
+1. To build an image classification endpoint that predicts banana ripeness from uploaded images.
+2. To return confidence scores for the predicted class and alternative classes.
+3. To store banana value-addition methods in a structured relational database.
+4. To retrieve and display value-addition recommendations based on the predicted ripeness stage.
+5. To provide a simple browser-based frontend for uploading images and viewing results.
+6. To expose the system through documented REST-style endpoints for integration and testing.
+
+1.5 Significance of the Study
+
+NDIZIAI is significant because it supports more informed banana handling and processing decisions. It helps users quickly move from visual assessment to actionable recommendations. For small processors and traders, this can improve product planning, reduce waste, and identify opportunities for higher-value products. For developers and researchers, it demonstrates a practical integration of computer vision, web APIs, and database-backed knowledge retrieval.
+
+1.6 Scope of the Project
+
+The system is limited to banana ripeness classification and ripeness-based value-addition recommendations. It supports the following ripeness categories: unripe, ripe, overripe, and rotten. The backend exposes a classification endpoint and a value-addition lookup endpoint. The frontend currently supports image upload, result display, and recommendation display.
+
+The project does not include farm-level IoT sensing, supply chain logistics, payments, user authentication, or full-scale mobile application support. It is designed as a focused proof-of-concept and decision-support tool.
+
+1.7 Assumptions
+
+The following assumptions are made in the project:
+
+1. Users can supply a clear banana image for classification.
+2. The model weights file best.pt is available in the project root.
+3. The target environment can run Python, Django, and the required machine learning dependencies.
+4. The value-addition database contains records for at least some ripeness stages.
+5. Users have basic access to a browser capable of sending HTTP requests to the local backend.
+
+1.8 Limitations
+
+The current system has the following limitations:
+
+1. The classification endpoint depends on the loaded model weights and local runtime libraries.
+2. The upload flow currently saves images temporarily to the /tmp directory during inference.
+3. Authentication and authorization are not yet implemented.
+4. The frontend currently uses hardcoded localhost API URLs.
+5. The usefulness of recommendations depends on the completeness of the value-addition records in the database.
+
+
+CHAPTER 2: LITERATURE REVIEW
+
+2.1 Introduction
+
+This chapter discusses the general ideas behind image-based fruit classification, decision-support systems for post-harvest handling, and database-backed recommendation workflows. The goal is to show why a combined classification-and-recommendation system is useful for banana value recovery.
+
+2.2 Related Concepts
+
+2.2.1 Image Classification for Agricultural Produce
+
+Computer vision models can detect fruit categories, maturity stages, defects, and quality indicators from images. Deep learning approaches, especially object detection and classification models, are widely used because they can learn visual patterns from training data. In NDIZIAI, a YOLO-based model is used to infer banana ripeness from an uploaded image.
+
+2.2.2 Post-Harvest Decision Support
+
+Decision-support tools are useful when a single input needs to lead to a practical recommendation. For fruit processing, the user often needs not only a classification result but also the next action to take. This project connects ripeness prediction to structured value-addition guidance so the output is directly actionable.
+
+2.2.3 Database-Driven Knowledge Retrieval
+
+Databases are appropriate when advisory content needs to be stored, filtered, and returned consistently. By storing methods, ingredients, storage tips, and selling places in relational form, the system can return complete records without hardcoding the content into the frontend.
+
+2.3 Gaps in Existing Approaches
+
+Many tools in this problem space focus on only one of the following:
+
+1. Classification without recommendations.
+2. General agricultural advice without image recognition.
+3. Manual lookup tables that are difficult to maintain.
+
+NDIZIAI fills this gap by combining ripeness classification and stage-specific value-addition suggestions in one local application.
+
+2.4 How NDIZIAI Addresses the Gap
+
+NDIZIAI predicts the ripeness stage from an image, uses that prediction as a key for database retrieval, and returns structured recommendations that can guide processing, storage, or selling decisions. This approach reduces manual interpretation and makes the output easier to use in practice.
+
+
+CHAPTER 3: METHODOLOGY
+
+3.1 Introduction
+
+The project uses a practical software engineering and Design Science approach. The artifact is a working web application that solves a specific problem through a combination of machine learning inference and rule-based content retrieval.
+
+3.2 Development Approach
+
+The development approach followed these stages:
+
+1. Requirements identification.
+2. Backend and model integration.
+3. Database design for value-addition content.
+4. Frontend implementation.
+5. Testing and refinement.
+
+3.3 Artifact Design
+
+The artifact consists of four main parts:
+
+1. A Django project that provides routing and application configuration.
+2. An API app that performs banana ripeness classification.
+3. A database app that stores and returns value-addition methods.
+4. A frontend client that handles image upload and result rendering.
+
+3.4 Data and Model Handling
+
+The system accepts image input from the user, writes the uploaded file to a temporary location, and passes that file to the YOLO model for inference. The model returns probabilities for the available banana classes. The highest probability is used as the top prediction. The resulting class is then used to query the value-addition database.
+
+3.5 Evaluation Strategy
+
+The system can be evaluated through:
+
+1. Functional testing of the classification endpoint.
+2. Functional testing of the value-addition endpoint.
+3. End-to-end testing from upload to recommendation display.
+4. Manual observation of confidence scores and retrieval behavior.
+
+3.6 Tools and Technologies
+
+The project uses the following technologies:
+
+1. Python.
+2. Django.
+3. Django REST Framework.
+4. Ultralytics YOLO.
+5. SQLite.
+6. HTML, CSS, and JavaScript.
+7. Swagger/ReDoc via drf-yasg.
+8. Git for source control.
+
+
+CHAPTER 4: SYSTEM ANALYSIS
+
+4.1 Introduction
+
+This chapter analyzes the requirements and operational flow of NDIZIAI. The analysis focuses on the data flow from image upload to inference and then to recommendation retrieval.
+
+4.2 Existing Manual Workflow
+
+Before a system like NDIZIAI, a user would typically inspect bananas visually and then decide what to do with them based on experience. This manual approach is fast but subjective. It does not provide confidence scores, and it does not automatically surface processing options.
+
+4.3 Proposed Workflow
+
+The proposed workflow is as follows:
+
+1. The user uploads a banana image.
+2. The backend receives the image at the classification endpoint.
+3. The image is saved temporarily and passed to the model.
+4. The model predicts the ripeness class and confidence values.
+5. The frontend uses the predicted class to request value-addition methods.
+6. The backend returns matched records from the database.
+7. The frontend displays the prediction and recommendations.
+
+4.4 Users of the System
+
+The main users are:
+
+1. Banana growers.
+2. Traders and market sellers.
+3. Small-scale food processors.
+4. Students or researchers studying banana handling.
+5. General users who want a quick ripeness-based recommendation.
+
+4.5 Functional Requirements
+
+The system must:
+
+1. Accept banana image uploads.
+2. Classify the ripeness stage of the banana image.
+3. Return the top class and all prediction probabilities.
+4. Retrieve value-addition records for a given ripeness stage.
+5. Display the resulting information in the browser.
+6. Provide API documentation routes for exploration.
+
+4.6 Non-Functional Requirements
+
+The system should:
+
+1. Respond quickly enough for interactive use.
+2. Be simple to deploy locally.
+3. Be easy to maintain and extend.
+4. Keep the data model structured and readable.
+5. Handle missing or invalid input gracefully.
+
+4.7 Key Constraints
+
+The main constraints are:
+
+1. The solution depends on the quality of the trained model.
+2. The backend must have access to the required machine learning libraries.
+3. The current frontend assumes local backend availability.
+4. The value-addition results depend on database records already being present.
+
+
+CHAPTER 5: SYSTEM DESIGN AND IMPLEMENTATION
+
+5.1 Overall Architecture
+
+NDIZIAI uses a modular Django-based architecture with the following layers:
+
+1. Presentation layer - the frontend HTML/CSS/JavaScript client.
+2. Application layer - Django apps that handle routing and business logic.
+3. Model layer - YOLO inference for classification.
+4. Data layer - SQLite models and serializers for value-addition content.
+
+5.2 Backend Structure
+
+The backend is split into separate apps to keep responsibilities clear:
+
+1. api - handles banana classification.
+2. db - handles value-addition data retrieval and serialization.
+3. backend - currently minimal placeholder app.
+4. ndiziai - project settings and URL configuration.
+
+5.3 Classification Module
+
+The classification module is implemented in api/views.py. It loads best.pt once at module import time using Ultralytics YOLO. When a POST request is received with an uploaded image, the file is temporarily written to disk, inference is executed, and the probability distribution is formatted into JSON.
+
+Returned data includes:
+
+1. top_prediction.class
+2. top_prediction.confidence
+3. all_predictions as a sorted mapping of class names to probabilities
+
+If the request is invalid, the endpoint returns a 400 response.
+
+5.4 Value-Addition Module
+
+The value-addition module is implemented in db/views.py and db/serializers.py. It accepts a ripeness_stage query parameter and filters ValueAdditionMethod records using a case-insensitive match. If no stage is provided, the endpoint returns a 400 error. If no records are found, it returns a 404 response. Otherwise, the records are serialized and returned as JSON.
+
+The data model includes:
+
+1. ValueAdditionMethod
+2. Ingredient
+3. MethodIngredient
+4. SellingPlace
+5. MethodSellingPlace
+6. StorageTip
+7. MarketTrend
+
+5.5 Database Design
+
+The database design allows one value-addition method to have many ingredients, selling places, storage tips, and market trends. This is useful because each banana processing method may have multiple practical details associated with it.
+
+Important fields include:
+
+1. name
+2. description
+3. guide
+4. youtube_link
+5. time_required
+6. equipment_needed
+7. category
+8. ripeness_stage
+
+5.6 Frontend Design
+
+The frontend uses plain JavaScript and a file input workflow. When the user selects an image, a preview is shown. When the classify button is clicked, the file is sent to the classification endpoint using FormData. Once a result is returned, the page displays the predicted class, confidence, and other probabilities. It then requests the matching value-addition methods and renders them.
+
+5.7 API Endpoints
+
+The current endpoints are:
+
+1. POST /api/classify/ - classify a banana image.
+2. GET /db/value-addition/?ripeness_stage=<stage> - retrieve value-addition methods.
+3. GET /swagger/ - Swagger UI.
+4. GET /redoc/ - ReDoc UI.
+
+5.8 Implementation Notes
+
+1. The classification endpoint is CSRF-exempt because it is intended for API usage.
+2. The backend currently uses local temporary file storage during inference.
+3. The frontend fetches data from localhost URLs in the current development setup.
+4. The project uses SQLite for ease of setup and portability.
+5. API documentation is exposed using drf-yasg.
+
+
+CHAPTER 6: TESTING AND EVALUATION
+
+6.1 Introduction
+
+Testing ensures that the system performs as expected for the most important workflows. For NDIZIAI, the critical flow is image upload, classification, and retrieval of value-addition content.
+
+6.2 Functional Test Scenarios
+
+Test 1: Valid image upload
+
+Expected result: The system returns a JSON response containing classification results and confidence values.
+
+Test 2: Missing image field
+
+Expected result: The system returns a 400 error with an invalid request message.
+
+Test 3: Valid ripeness stage query
+
+Expected result: The value-addition endpoint returns matching records as JSON.
+
+Test 4: Missing ripeness stage
+
+Expected result: The value-addition endpoint returns a 400 error indicating that ripeness stage is required.
+
+Test 5: Unknown ripeness stage
+
+Expected result: The value-addition endpoint returns a 404 message indicating that no records were found.
+
+6.3 End-to-End Behavior
+
+In a normal successful run, the user uploads a banana image, receives a ripeness prediction, and then sees a list of suitable value-addition methods for that predicted stage. This confirms that the classification output can be used directly to drive a useful recommendation layer.
+
+6.4 Observed Strengths
+
+1. The system provides a complete flow from input image to action-oriented suggestion.
+2. The response format is easy to consume from the frontend.
+3. The database design keeps recommendations structured and reusable.
+4. The application is lightweight enough for local development.
+
+6.5 Observed Weaknesses
+
+1. The frontend currently depends on fixed localhost endpoints.
+2. The classification response depends on the performance of the trained model.
+3. There is no user login or permission management yet.
+4. The system currently assumes that the database already contains useful records.
+
+
+CHAPTER 7: CONCLUSION AND FUTURE WORK
+
+7.1 Conclusion
+
+NDIZIAI demonstrates a simple but effective approach to banana ripeness analysis and value-addition guidance. By combining machine learning inference with database-backed retrieval, the project reduces the gap between visual ripeness recognition and practical post-harvest action. The system is useful as a local decision-support tool and as a foundation for further development.
+
+7.2 Future Work
+
+Possible future improvements include:
+
+1. Adding authentication and role-based access.
+2. Allowing deployment to a production server instead of localhost.
+3. Improving image validation and upload security.
+4. Expanding the dataset and retraining the model for higher accuracy.
+5. Adding analytics for prediction history and usage tracking.
+6. Supporting more crop types beyond bananas.
+7. Building a richer frontend with charts, export options, and mobile-friendly layouts.
+
+
+REFERENCES
+
+1. Django Documentation - https://docs.djangoproject.com/
+2. Django REST Framework Documentation - https://www.django-rest-framework.org/
+3. Ultralytics YOLO Documentation - https://docs.ultralytics.com/
+4. SQLite Documentation - https://www.sqlite.org/docs.html
+5. drf-yasg Documentation and usage notes
+6. Project source files within the NDIZIAI workspace
+
+
+APPENDIX A: SHORT PROJECT SUMMARY
+
+NDIZIAI is a banana ripeness classification system that uses a YOLO model to identify the ripeness stage of an uploaded image and then returns corresponding value-addition recommendations from a structured database. The project is built with Django, Django REST Framework, SQLite, Ultralytics YOLO, HTML, CSS, and JavaScript.
