@@ -1,44 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banana Ripeness Classifier</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NDIZIAI | Banana Intelligence</title>
+    <meta name="description" content="Upload a banana image, classify ripeness, and receive practical value-addition methods." />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .is-hidden { display: none !important; }
+        .bar-row { display: grid; grid-template-columns: 88px 1fr 58px; gap: 8px; align-items: center; }
+        .bar-name { font-size: 12px; color: rgb(6 78 59 / 0.8); text-transform: capitalize; }
+        .bar-track { width: 100%; height: 8px; border-radius: 999px; background: rgb(209 250 229); overflow: hidden; }
+        .bar-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #84cc16 0%, #059669 100%); transition: width 350ms ease; }
+        .bar-value { justify-self: end; font-size: 12px; font-weight: 600; color: rgb(6 78 59); }
+        .method-item { border: 1px solid rgb(167 243 208); border-radius: 10px; padding: 10px; background: rgb(236 253 245 / 0.6); }
+        .method-item h4 { margin: 0; font-size: 15px; color: rgb(6 78 59); }
+        .method-meta { margin: 6px 0 0; font-size: 12px; color: rgb(6 95 70 / 0.8); }
+        .method-desc { margin: 8px 0 0; font-size: 13px; color: rgb(6 78 59); line-height: 1.4; }
+        .method-link { display: inline-block; margin-top: 8px; color: rgb(4 120 87); font-weight: 600; text-decoration: none; }
+        .method-link:hover { text-decoration: underline; }
+    </style>
+    <script src="script.js" defer></script>
 </head>
-<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-6">
+<body class="bg-gradient-to-br from-lime-50 via-amber-50 to-emerald-100 min-h-screen flex items-center justify-center p-4 sm:p-6">
 
-    <div class="bg-white shadow-lg rounded-xl p-8 w-full max-w-md text-center">
-        <h1 class="text-2xl font-bold text-gray-700">Upload a Banana Image</h1>
-        
-        <div class="mt-4">
-            <input type="file" id="imageInput" accept="image/*" 
-                   class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 p-2 focus:outline-none">
+    <main class="w-full max-w-md">
+        <div class="bg-white rounded-3xl shadow-2xl border border-emerald-100 p-5 sm:p-6 relative">
+            <div class="text-center mb-5">
+                <p class="text-[11px] tracking-[0.18em] font-semibold text-emerald-700">NDIZIAI PLATFORM</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-emerald-900 leading-tight">Smart Banana Quality Assistant</h1>
+                <p class="text-sm text-emerald-800/80 mt-1">Classify ripeness and unlock practical value-addition options.</p>
+            </div>
+
+            <section id="homeScreen" class="screen">
+                <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center mb-4">
+                    <div class="text-5xl">🍌</div>
+                    <p class="text-emerald-900 font-semibold mt-2">Welcome to NDIZIAI</p>
+                    <p class="text-sm text-emerald-800/80 mt-1">Start by uploading a clear banana image.</p>
+                </div>
+
+                <button id="goUpload" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-medium transition-colors" type="button">
+                    Upload Banana Image
+                </button>
+            </section>
+
+            <section id="uploadScreen" class="screen hidden">
+                <h2 class="text-lg font-semibold text-emerald-900 text-center mb-3">Upload Image</h2>
+
+                <label for="imageInput" class="block border-2 border-dashed border-emerald-200 bg-emerald-50/60 p-5 text-center rounded-xl mb-3 cursor-pointer hover:border-emerald-400 transition-colors">
+                    <p class="text-emerald-900 font-medium">Tap to select image</p>
+                    <p class="text-emerald-700/80 text-sm">JPG, PNG, WEBP</p>
+                </label>
+
+                <input type="file" id="imageInput" accept="image/*"
+                    class="block w-full text-sm text-emerald-900 border border-emerald-200 rounded-xl cursor-pointer bg-white p-2.5 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-emerald-100 file:text-emerald-900 file:font-medium" />
+
+                <figure id="previewCard" class="is-hidden mt-4 max-h-64 overflow-hidden rounded-xl border border-emerald-200 bg-emerald-50" aria-live="polite">
+                    <img id="preview" alt="Selected banana preview" class="w-full h-full object-cover" />
+                </figure>
+
+                <div class="grid grid-cols-2 gap-2 mt-4">
+                    <button id="classifyButton" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-medium transition-colors" type="button">
+                        Classify
+                    </button>
+                    <button id="resetButton" class="w-full border border-emerald-300 text-emerald-800 py-2.5 rounded-xl font-medium hover:bg-emerald-50 transition-colors" type="button">
+                        Reset
+                    </button>
+                </div>
+
+                <p id="statusText" class="text-sm text-emerald-800 mt-3 text-center" aria-live="polite">Ready for analysis.</p>
+            </section>
+
+            <section id="resultScreen" class="screen hidden">
+                <h2 class="text-lg font-semibold text-emerald-900 text-center mb-3">Analysis Result</h2>
+
+                <section id="emptyState" class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-600">
+                    <p>Run analysis to view ripeness and recommendations.</p>
+                </section>
+
+                <section id="resultCard" class="is-hidden bg-white border border-emerald-200 rounded-xl p-4 space-y-3" aria-live="polite">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-sm text-emerald-800/80">Top Prediction</p>
+                        <p id="predictedClass" class="text-xl font-bold text-emerald-900">-</p>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-sm text-emerald-800/80">Confidence</p>
+                        <p id="confidenceValue" class="font-semibold text-emerald-900">0%</p>
+                    </div>
+                    <div id="allPredictions" class="space-y-2"></div>
+                </section>
+
+                <section id="methodsCard" class="is-hidden mt-3 bg-white border border-emerald-200 rounded-xl p-4" aria-live="polite">
+                    <h3 class="text-base font-semibold text-emerald-900">Value-Addition Methods</h3>
+                    <div id="methodsList" class="mt-3 space-y-2"></div>
+                </section>
+            </section>
+
+            <section id="recommendScreen" class="screen hidden">
+                <h2 class="text-lg font-semibold text-emerald-900 text-center mb-3">Recommendations</h2>
+                <div id="recommendations" class="text-sm text-emerald-900 space-y-3 bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+                    <p>Recommendations will appear here after classification.</p>
+                </div>
+            </section>
+
+            <nav class="flex justify-around mt-6 text-slate-700 text-sm border-t border-slate-200 pt-3">
+                <button class="hover:text-emerald-700" onclick="showScreen('homeScreen')" type="button">🏠 Home</button>
+                <button class="hover:text-emerald-700" onclick="showScreen('uploadScreen')" type="button">📤 Upload</button>
+                <button class="hover:text-emerald-700" onclick="showScreen('resultScreen')" type="button">📊 Result</button>
+                <button class="hover:text-emerald-700" onclick="showScreen('recommendScreen')" type="button">💡 Advice</button>
+            </nav>
         </div>
+    </main>
 
-        <div class="mt-4 flex justify-center">
-            <img id="preview" src="#" alt="Image Preview" class="hidden max-w-xs rounded-lg border border-gray-300">
-        </div>
+    <script>
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach((screen) => screen.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
 
-        <button id="classifyButton" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg transition-all">
-            Classify
-        </button>
+        document.getElementById('goUpload').addEventListener('click', () => showScreen('uploadScreen'));
 
-        <p id="loading" class="hidden text-blue-500 font-semibold mt-4">Classifying... Please wait.</p>
+        const resultObserver = new MutationObserver(() => {
+            const predicted = document.getElementById('predictedClass').textContent.trim().toLowerCase();
+            const methods = document.getElementById('methodsList').textContent.trim();
+            const hasResult = predicted && predicted !== '-';
 
-        <div id="result" class="mt-6 hidden bg-gray-50 p-4 rounded-lg shadow-md">
-            <h3 class="text-lg font-bold text-gray-700">Classification Results:</h3>
-            <p class="text-gray-600 mt-2"></p>
-        </div>
+            if (!hasResult) {
+                return;
+            }
 
-        <div id="valueAddition" class="mt-6 hidden bg-gray-50 p-4 rounded-lg shadow-md">
-            <h3 class="text-lg font-bold text-gray-700">Value Addition Methods</h3>
-            <div class="value-methods space-y-2"></div>
-        </div>
-    </div>
+            showScreen('resultScreen');
 
-    <!-- Link to External JavaScript -->
-    <script src="script.js"></script>
+            const rec = document.getElementById('recommendations');
+            if (predicted === 'ripe') {
+                rec.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-emerald-800">What To Do</h3>
+                        <p>Sell within 2-3 days for best quality and higher market value.</p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-emerald-800">Storage Advice</h3>
+                        <p>Store in a cool, dry place. Keep away from direct sunlight.</p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-emerald-800">Processing Options</h3>
+                        <p>Suitable for fresh market or making banana chips.</p>
+                    </div>`;
+            } else if (methods) {
+                rec.innerHTML = `<p>Follow the value-addition methods shown in the Result screen for this stage.</p>`;
+            } else {
+                rec.innerHTML = `<p>No recommendations available yet. Run analysis first.</p>`;
+            }
+        });
 
+        resultObserver.observe(document.getElementById('predictedClass'), { childList: true, subtree: true });
+        resultObserver.observe(document.getElementById('methodsList'), { childList: true, subtree: true });
+    </script>
 </body>
 </html>

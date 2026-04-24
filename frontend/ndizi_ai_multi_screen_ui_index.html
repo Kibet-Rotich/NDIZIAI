@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ndizi AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-6">
+
+    <!-- Phone Frame -->
+    <div class="bg-white rounded-3xl shadow-lg w-80 p-5 relative">
+
+        <!-- ================= HOME SCREEN ================= -->
+        <div id="homeScreen" class="screen">
+            <div class="text-center mb-6">
+                <div class="text-5xl">🍌</div>
+                <h2 class="text-2xl font-bold text-green-700">Ndizi AI</h2>
+                <p class="text-gray-600 text-sm">Your Smart Banana Quality Assistant</p>
+            </div>
+
+            <button id="goUpload" class="w-full bg-green-600 text-white py-2 rounded-lg mb-3">
+                Upload Banana Image
+            </button>
+
+            <button class="w-full border border-gray-400 py-2 rounded-lg">
+                Take Photo
+            </button>
+        </div>
+
+        <!-- ================= UPLOAD SCREEN ================= -->
+        <div id="uploadScreen" class="screen hidden">
+            <h2 class="text-xl font-bold text-center mb-4">Upload Image</h2>
+
+            <div class="border-2 border-dashed border-gray-300 p-6 text-center rounded-lg mb-4">
+                <p class="text-gray-500">Tap to select image<br>or drag and drop</p>
+            </div>
+
+            <!-- IMPORTANT IDs (used by script.js) -->
+            <input type="file" id="imageInput" accept="image/*"
+                   class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 p-2" />
+
+            <img id="preview" src="#" alt="Preview"
+                 class="hidden mt-4 max-w-xs rounded-lg border border-gray-300 mx-auto" />
+
+            <button id="classifyButton" class="w-full bg-green-600 text-white py-2 rounded-lg mt-4">
+                Classify
+            </button>
+
+            <p id="loading" class="hidden text-blue-500 font-semibold mt-4 text-center">
+                Classifying... Please wait.
+            </p>
+        </div>
+
+        <!-- ================= RESULT SCREEN ================= -->
+        <div id="resultScreen" class="screen hidden">
+            <h2 class="text-xl font-bold text-center mb-4">Analysis Result</h2>
+
+            <div id="result" class="bg-gray-50 p-4 rounded-lg shadow"></div>
+
+            <div id="valueAddition" class="mt-4"></div>
+        </div>
+
+        <!-- ================= RECOMMENDATION SCREEN ================= -->
+        <div id="recommendScreen" class="screen hidden">
+            <h2 class="text-xl font-bold text-center mb-4">Recommendations</h2>
+
+            <div id="recommendations" class="text-sm text-gray-600 space-y-3">
+                <p>Recommendations will appear here after classification.</p>
+            </div>
+        </div>
+
+        <!-- ================= BOTTOM NAVIGATION ================= -->
+        <div class="flex justify-around mt-6 text-gray-600 text-sm border-t pt-3">
+            <button onclick="showScreen('homeScreen')">🏠 Home</button>
+            <button onclick="showScreen('uploadScreen')">📤 Upload</button>
+            <button onclick="showScreen('resultScreen')">📊 Result</button>
+            <button onclick="showScreen('recommendScreen')">💡 Advice</button>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+    <!-- Navigation + Auto Switch Logic -->
+    <script>
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        // Button to go to upload
+        document.getElementById('goUpload').onclick = () => showScreen('uploadScreen');
+
+        // When results load from script.js, switch to result screen and recommendations
+        const observer = new MutationObserver(() => {
+            const resultDiv = document.getElementById('result');
+            if (resultDiv.innerHTML.trim() !== '') {
+                showScreen('resultScreen');
+
+                // Simple recommendation text based on result content
+                const rec = document.getElementById('recommendations');
+                if (resultDiv.innerText.toLowerCase().includes('ripe')) {
+                    rec.innerHTML = `
+                        <div>
+                            <h3 class=\"font-bold text-green-700\">What To Do</h3>
+                            <p>Sell within 2–3 days for best quality and higher market value.</p>
+                        </div>
+                        <div>
+                            <h3 class=\"font-bold text-green-700\">Storage Advice</h3>
+                            <p>Store in a cool, dry place. Keep away from direct sunlight.</p>
+                        </div>
+                        <div>
+                            <h3 class=\"font-bold text-green-700\">Processing Options</h3>
+                            <p>Suitable for fresh market or making banana chips.</p>
+                        </div>`;
+                } else {
+                    rec.innerHTML = `<p>Follow value addition methods shown in results.</p>`;
+                }
+            }
+        });
+
+        observer.observe(document.getElementById('result'), { childList: true });
+    </script>
+
+</body>
+</html>

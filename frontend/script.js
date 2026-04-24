@@ -1,121 +1,203 @@
-document.getElementById("imageInput").addEventListener("change", function (event) {
-    const file = event.target.files[0];
-    const preview = document.getElementById("preview");
+const API_BASE = "http://127.0.0.1:8000";
 
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            preview.src = e.target.result;
-            preview.classList.remove("hidden");
-        };
-        reader.readAsDataURL(file);
+const imageInput = document.getElementById("imageInput");
+const preview = document.getElementById("preview");
+const previewCard = document.getElementById("previewCard");
+
+const classifyButton = document.getElementById("classifyButton");
+const resetButton = document.getElementById("resetButton");
+const statusText = document.getElementById("statusText");
+
+const resultCard = document.getElementById("resultCard");
+const methodsCard = document.getElementById("methodsCard");
+const emptyState = document.getElementById("emptyState");
+
+const predictedClass = document.getElementById("predictedClass");
+const confidenceValue = document.getElementById("confidenceValue");
+const allPredictions = document.getElementById("allPredictions");
+const methodsList = document.getElementById("methodsList");
+
+let previewUrl = "";
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function titleCase(value) {
+    return String(value)
+        .replace(/[_-]/g, " ")
+        .replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function setStatus(message, tone) {
+    statusText.textContent = message;
+    statusText.classList.remove("warn", "good");
+    if (tone) statusText.classList.add(tone);
+}
+
+function resetResults() {
+    predictedClass.textContent = "-";
+    confidenceValue.textContent = "0%";
+    allPredictions.innerHTML = "";
+    methodsList.innerHTML = "";
+    resultCard.classList.add("is-hidden");
+    methodsCard.classList.add("is-hidden");
+    emptyState.classList.remove("is-hidden");
+}
+
+function clearPreview() {
+    if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        previewUrl = "";
     }
-});
+    preview.removeAttribute("src");
+    previewCard.classList.add("is-hidden");
+}
 
-document.getElementById("classifyButton").addEventListener("click", function () {
-    const fileInput = document.getElementById("imageInput");
-    const resultDiv = document.getElementById("result");
-    const classifyButton = document.getElementById("classifyButton");
-    const loadingText = document.getElementById("loading");
-    const valueAdditionDiv = document.getElementById("valueAddition");
+function renderPredictions(topPrediction, predictionMap) {
+    resultCard.classList.remove("is-hidden");
+    emptyState.classList.add("is-hidden");
 
-    if (fileInput.files.length === 0) {
-        resultDiv.innerHTML = "<p style='color: red;'>Please select an image.</p>";
-        resultDiv.classList.remove("hidden");
+    const className = titleCase(topPrediction.class || "Unknown");
+    const confidence = Number(topPrediction.confidence || 0);
+
+    predictedClass.textContent = className;
+    confidenceValue.textContent = `${(confidence * 100).toFixed(2)}%`;
+
+    const entries = Object.entries(predictionMap || {});
+    allPredictions.innerHTML = "";
+
+    entries.forEach(([name, score]) => {
+        const safeName = escapeHtml(titleCase(name));
+        const safeScore = Number(score) || 0;
+        const percent = Math.max(0, Math.min(100, safeScore * 100));
+
+        const row = document.createElement("div");
+        row.className = "bar-row";
+        row.innerHTML = `
+            <span class="bar-name">${safeName}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${percent.toFixed(2)}%"></div></div>
+            <span class="bar-value">${percent.toFixed(2)}%</span>
+        `;
+        allPredictions.appendChild(row);
+    });
+}
+
+function renderMethods(methods, stage) {
+    methodsCard.classList.remove("is-hidden");
+    methodsList.innerHTML = "";
+
+    if (!methods || methods.length === 0) {
+        methodsList.innerHTML = `<p class="method-meta">No value-addition methods found for ${escapeHtml(titleCase(stage))} bananas yet.</p>`;
         return;
     }
 
-    const formData = new FormData();
-    formData.append("image", fileInput.files[0]);
+    methods.forEach((method) => {
+        const card = document.createElement("article");
+        card.className = "method-item";
+
+        const category = method.category ? titleCase(method.category) : "General";
+        const description = method.description ? escapeHtml(method.description) : "No description available.";
+        const title = escapeHtml(method.name || "Untitled Method");
+
+        card.innerHTML = `
+            <h4>${title}</h4>
+            <p class="method-meta">Category: ${escapeHtml(category)}</p>
+            <p class="method-desc">${description}</p>
+        `;
+
+        if (method.youtube_link) {
+            const safeLink = escapeHtml(method.youtube_link);
+            const anchor = document.createElement("a");
+            anchor.className = "method-link";
+            anchor.href = safeLink;
+            anchor.target = "_blank";
+            anchor.rel = "noopener noreferrer";
+            anchor.textContent = "Open tutorial";
+            card.appendChild(anchor);
+        }
+
+        methodsList.appendChild(card);
+    });
+}
+
+imageInput.addEventListener("change", () => {
+    const file = imageInput.files[0];
+
+    resetResults();
+    if (!file) {
+        clearPreview();
+        setStatus("Ready for analysis.");
+        return;
+    }
+
+    clearPreview();
+    previewUrl = URL.createObjectURL(file);
+    preview.src = previewUrl;
+    previewCard.classList.remove("is-hidden");
+    setStatus("Image loaded. Click Analyze Ripeness.", "good");
+});
+
+resetButton.addEventListener("click", () => {
+    imageInput.value = "";
+    clearPreview();
+    resetResults();
+    setStatus("Reset complete. Choose another image.");
+});
+
+classifyButton.addEventListener("click", async () => {
+    const file = imageInput.files[0];
+
+    if (!file) {
+        setStatus("Please select an image first.", "warn");
+        return;
+    }
 
     classifyButton.disabled = true;
-    loadingText.classList.remove("hidden");
+    setStatus("Classifying image. Please wait...");
 
-    console.log("Sending request...");
+    try {
+        const formData = new FormData();
+        formData.append("image", file);
 
-    fetch("http://127.0.0.1:8000/api/classify/", {
-        method: "POST",
-        body: formData,
-        mode: "cors"
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Response received:", data);
+        const classifyResponse = await fetch(`${API_BASE}/api/classify/`, {
+            method: "POST",
+            body: formData,
+            mode: "cors"
+        });
 
-        if (data.results && data.results.length > 0) {
-            let topPrediction = data.results[0].top_prediction;
-            let ripenessClass = topPrediction.class;
-            let confidence = (topPrediction.confidence * 100).toFixed(2);
+        const classifyData = await classifyResponse.json();
+        const firstResult = classifyData?.results?.[0];
 
-            let resultHTML = `
-                <h3 class="text-lg font-bold text-gray-700">Classification Results:</h3>
-                <p><strong>Predicted Class:</strong> ${ripenessClass}</p>
-                <p><strong>Confidence Level:</strong> ${confidence}%</p>
-            `;
-
-            if (data.results[0].all_predictions && typeof data.results[0].all_predictions === "object") {
-                resultHTML += `<h4 class="font-semibold">All Predictions:</h4><ul>`;
-                Object.entries(data.results[0].all_predictions).forEach(([cls, conf]) => {
-                    resultHTML += `<li><strong>${cls}:</strong> ${(conf * 100).toFixed(2)}%</li>`;
-                });
-                resultHTML += `</ul>`;
-            } else {
-                console.warn("all_predictions is missing or not an object:", data.results[0].all_predictions);
-                resultHTML += `<p style="color: orange;">No additional predictions available.</p>`;
-            }
-
-            resultDiv.innerHTML = resultHTML;
-            resultDiv.classList.remove("hidden");
-
-            // Fetch value addition methods based on ripeness level
-            fetch(`http://127.0.0.1:8000/db/value-addition/?ripeness_stage=${ripenessClass}`)
-            .then(response => response.json())
-            .then(valueData => {
-                console.log("Value addition methods received:", valueData);
-
-                if (valueData.results && valueData.results.length > 0) {
-                    let valueHTML = `
-                        <h3 class="text-lg font-bold text-gray-700">Value Addition Methods for ${ripenessClass}</h3>
-                        <div class="value-methods space-y-4">
-                    `;
-
-                    valueData.results.forEach(method => {
-                        valueHTML += `
-                            <div class="value-item p-4 bg-gray-100 rounded-lg shadow">
-                                <h4 class="font-semibold text-green-700">${method.name}</h4>
-                                <p>${method.description}</p>
-                                <p><strong>Category:</strong> ${method.category}</p>
-                                ${method.youtube_link ? `<a href="${method.youtube_link}" target="_blank" class="text-blue-500 hover:underline">Watch Guide</a>` : ""}
-                            </div>
-                        `;
-                    });
-
-                    valueHTML += "</div>";
-                    valueAdditionDiv.innerHTML = valueHTML;
-                    valueAdditionDiv.classList.remove("hidden");
-                } else {
-                    valueAdditionDiv.innerHTML = `<p>No value addition methods found for ${ripenessClass} bananas.</p>`;
-                    valueAdditionDiv.classList.remove("hidden");
-                }
-            })
-            .catch(error => {
-                console.error("Error fetching value addition methods:", error);
-                valueAdditionDiv.innerHTML = "<p style='color: red;'>Failed to fetch value addition methods.</p>";
-                valueAdditionDiv.classList.remove("hidden");
-            });
-
-        } else {
-            resultDiv.innerHTML = "<p style='color: red;'>No predictions received.</p>";
-            resultDiv.classList.remove("hidden");
+        if (!firstResult?.top_prediction) {
+            throw new Error("No valid prediction returned.");
         }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        resultDiv.innerHTML = "<p style='color: red;'>Failed to fetch results.</p>";
-        resultDiv.classList.remove("hidden");
-    })
-    .finally(() => {
+
+        const topPrediction = firstResult.top_prediction;
+        const allPredictionMap = firstResult.all_predictions || {};
+        renderPredictions(topPrediction, allPredictionMap);
+
+        const stage = topPrediction.class;
+        setStatus(`Predicted ${titleCase(stage)}. Loading value-addition methods...`);
+
+        const methodsResponse = await fetch(
+            `${API_BASE}/db/value-addition/?ripeness_stage=${encodeURIComponent(stage)}`,
+            { mode: "cors" }
+        );
+        const methodsData = await methodsResponse.json();
+
+        renderMethods(methodsData?.results || [], stage);
+        setStatus("Analysis complete.", "good");
+    } catch (error) {
+        console.error(error);
+        resetResults();
+        setStatus("Could not complete classification. Check backend server and try again.", "warn");
+    } finally {
         classifyButton.disabled = false;
-        loadingText.classList.add("hidden");
-    });
+    }
 });
